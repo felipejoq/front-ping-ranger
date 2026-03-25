@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@clerk/nextjs'
+import { authClient, getBackendToken } from '@/lib/auth-client'
 import useSWR from 'swr'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
@@ -15,13 +15,13 @@ interface IncidentsTableProps {
 const PAGE_SIZE = 10
 
 export function IncidentsTable({ monitorId }: IncidentsTableProps) {
-  const { getToken, isLoaded } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
   const [offset, setOffset] = useState(0)
 
   const { data, isLoading } = useSWR<IncidentsResponse>(
-    isLoaded ? `/incidents?monitorId=${monitorId}&offset=${offset}` : null,
+    !isPending && session ? `/incidents?monitorId=${monitorId}&offset=${offset}` : null,
     async () => {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       return api.getIncidents(monitorId, PAGE_SIZE, offset)
     },

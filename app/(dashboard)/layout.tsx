@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { UserButton, useClerk, useUser } from '@clerk/nextjs'
-import { Radar, LayoutDashboard, HelpCircle, Menu, X, LogOut } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Radar, LayoutDashboard, HelpCircle, Menu, LogOut } from 'lucide-react'
+import { authClient } from '@/lib/auth-client'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -13,18 +13,21 @@ const navItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { signOut } = useClerk()
-  const { user } = useUser()
+  const { data: session } = authClient.useSession()
+
+  async function handleSignOut() {
+    await authClient.signOut()
+    router.push('/')
+  }
 
   return (
     <div className="flex min-h-screen">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed lg:sticky top-0 left-0 z-50 lg:z-auto h-screen w-60 bg-bg-card border-r border-border-subtle flex flex-col transition-transform duration-200 lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -58,18 +61,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div className="px-4 py-4 border-t border-border-subtle space-y-3">
           <div className="flex items-center gap-3">
-            <UserButton
-              appearance={{
-                elements: { avatarBox: 'h-8 w-8' },
-              }}
-            />
+            <div className="h-8 w-8 rounded-full bg-accent/20 flex items-center justify-center text-accent font-medium text-sm">
+              {session?.user?.name?.[0]?.toUpperCase() ?? '?'}
+            </div>
             <div className="min-w-0">
-              <p className="text-sm text-text-primary truncate">{user?.fullName ?? user?.firstName ?? 'Usuario'}</p>
-              <p className="text-xs text-text-muted truncate">{user?.primaryEmailAddress?.emailAddress}</p>
+              <p className="text-sm text-text-primary truncate">{session?.user?.name ?? 'Usuario'}</p>
+              <p className="text-xs text-text-muted truncate">{session?.user?.email}</p>
             </div>
           </div>
           <button
-            onClick={() => signOut({ redirectUrl: '/' })}
+            onClick={handleSignOut}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-text-secondary hover:text-status-down hover:bg-status-down/5 transition-colors"
           >
             <LogOut className="h-4 w-4" />
@@ -78,7 +79,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-border-subtle bg-bg-card">
           <button onClick={() => setSidebarOpen(true)} className="text-text-secondary">

@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@clerk/nextjs'
+import { authClient } from '@/lib/auth-client'
 import { Radar, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function Navbar() {
-  const { isSignedIn, isLoaded } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
+  const isSignedIn = !!session
+  const isLoaded = !isPending
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 

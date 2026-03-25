@@ -2,8 +2,8 @@
 
 import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@clerk/nextjs'
 import useSWR from 'swr'
+import { authClient, getBackendToken } from '@/lib/auth-client'
 import { Plus, Radar, AlertTriangle } from 'lucide-react'
 import { Monitor, createApiClient } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -16,13 +16,13 @@ interface MonitorListProps {
 }
 
 export function MonitorList({ initialMonitors }: MonitorListProps) {
-  const { getToken } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
 
   const { data: monitors, mutate } = useSWR<Monitor[]>(
-    '/monitors',
+    !isPending && session ? '/monitors' : null,
     async () => {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       return api.getMonitors()
     },

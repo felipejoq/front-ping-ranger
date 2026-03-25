@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@clerk/nextjs'
+import { getBackendToken } from '@/lib/auth-client'
 import { useState } from 'react'
 import { useSWRConfig } from 'swr'
 import { ChevronDown, ChevronUp, Globe, Copy, Check } from 'lucide-react'
@@ -53,7 +53,6 @@ function getAlertType(monitor?: MonitorDetail): 'telegram' | 'discord' | 'slack'
 }
 
 export function MonitorForm({ monitor }: MonitorFormProps) {
-  const { getToken } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
   const { mutate } = useSWRConfig()
@@ -95,7 +94,7 @@ export function MonitorForm({ monitor }: MonitorFormProps) {
 
   async function onSubmit(data: FormValues) {
     try {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
 
       const alertConfig =

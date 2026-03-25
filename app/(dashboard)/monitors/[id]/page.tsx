@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@clerk/nextjs'
+import { authClient, getBackendToken } from '@/lib/auth-client'
 import useSWR from 'swr'
 import { ExternalLink, Pencil, Trash2, Clock, Activity, Wifi, Calendar, Globe, GlobeLock, Copy, Check } from 'lucide-react'
 import { MonitorDetail, createApiClient } from '@/lib/api'
@@ -17,7 +17,7 @@ import { formatRelativeTime, formatDate, formatDuration } from '@/lib/utils'
 
 export default function MonitorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { getToken, isLoaded } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
   const { toast } = useToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -26,9 +26,9 @@ export default function MonitorDetailPage({ params }: { params: Promise<{ id: st
   const [copied, setCopied] = useState(false)
 
   const { data: monitor, isLoading, mutate } = useSWR<MonitorDetail>(
-    isLoaded ? `/monitors/${id}` : null,
+    !isPending && session ? `/monitors/${id}` : null,
     async () => {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       return api.getMonitor(id)
     },
@@ -39,7 +39,7 @@ export default function MonitorDetailPage({ params }: { params: Promise<{ id: st
     if (!monitor) return
     setPublishing(true)
     try {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       await api.updateMonitor(id, { makePublic: !monitor.publicSlug })
       toast(monitor.publicSlug ? 'Monitor despublicado' : 'Status page publicada')
@@ -61,7 +61,7 @@ export default function MonitorDetailPage({ params }: { params: Promise<{ id: st
   async function handleDelete() {
     setDeleting(true)
     try {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       await api.deleteMonitor(id)
       toast('Monitor eliminado')

@@ -1,26 +1,27 @@
-import { auth } from '@clerk/nextjs/server'
-import { Monitor } from '@/lib/api'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { MonitorList } from '@/components/monitors/monitor-list'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
-
-async function getMonitors(token: string): Promise<Monitor[]> {
-  try {
-    const res = await fetch(`${API_URL}/monitors`, {
-      headers: { Authorization: `Bearer ${token}` },
-      next: { revalidate: 0 },
-    })
-    if (!res.ok) return []
-    return res.json()
-  } catch {
-    return []
-  }
-}
-
 export default async function DashboardPage() {
-  const { getToken } = await auth()
-  const token = await getToken()
-  const initialMonitors = token ? await getMonitors(token) : []
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join('; ')
 
-  return <MonitorList initialMonitors={initialMonitors} />
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+  console.log('[Dashboard] cookies present:', cookieStore.getAll().map((c) => c.name))
+
+  const res = await fetch(`${apiUrl}/api/auth/get-session`, {
+    headers: { Cookie: cookieHeader },
+    cache: 'no-store',
+  })
+
+  console.log('[Dashboard] session status:', res.status)
+  const data = (await res.json().catch(() => null)) as { session?: unknown } | null
+  console.log('[Dashboard] session data:', JSON.stringify(data))
+
+  if (!data?.session) redirect('/sign-in')
+
+  return <MonitorList initialMonitors={[]} />
 }

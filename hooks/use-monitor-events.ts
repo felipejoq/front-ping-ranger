@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useAuth } from '@clerk/nextjs'
+import { authClient, getBackendToken } from '@/lib/auth-client'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
@@ -14,19 +14,19 @@ interface MonitorEvent {
 }
 
 export function useMonitorEvents(onEvent: (event: MonitorEvent) => void): boolean {
-  const { getToken, isLoaded } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
   const onEventRef = useRef(onEvent)
   onEventRef.current = onEvent
   const [connected, setConnected] = useState(false)
 
   useEffect(() => {
-    if (!isLoaded) return
+    if (isPending || !session) return
 
     let eventSource: EventSource | null = null
     let cancelled = false
 
     async function connect() {
-      const token = await getToken()
+      const token = await getBackendToken()
       if (cancelled || !token) return
 
       const url = `${API_URL}/events/monitors?token=${encodeURIComponent(token)}`
@@ -46,9 +46,7 @@ export function useMonitorEvents(onEvent: (event: MonitorEvent) => void): boolea
       eventSource.onerror = () => {
         setConnected(false)
         eventSource?.close()
-        if (!cancelled) {
-          setTimeout(connect, 5000)
-        }
+        if (!cancelled) setTimeout(connect, 5000)
       }
     }
 
@@ -59,7 +57,7 @@ export function useMonitorEvents(onEvent: (event: MonitorEvent) => void): boolea
       setConnected(false)
       eventSource?.close()
     }
-  }, [isLoaded, getToken])
+  }, [isPending, session])
 
   return connected
 }

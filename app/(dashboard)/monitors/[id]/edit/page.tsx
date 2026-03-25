@@ -1,19 +1,19 @@
 'use client'
 
 import { use } from 'react'
-import { useAuth } from '@clerk/nextjs'
+import { authClient, getBackendToken } from '@/lib/auth-client'
 import useSWR from 'swr'
 import { MonitorDetail, createApiClient } from '@/lib/api'
 import { MonitorForm } from '@/components/monitors/monitor-form'
 
 export default function EditMonitorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { getToken, isLoaded } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
 
   const { data: monitor, isLoading } = useSWR<MonitorDetail>(
-    isLoaded ? `/monitors/${id}` : null,
+    !isPending && session ? `/monitors/${id}` : null,
     async () => {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       return api.getMonitor(id)
     },

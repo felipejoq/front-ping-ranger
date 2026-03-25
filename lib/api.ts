@@ -10,7 +10,6 @@ export interface Monitor {
   lastCheckedAt: string | null
   lastStatus: MonitorStatus
   lastLatencyMs: number | null
-  clerkUserId: string
   createdAt: string
   incidents?: (Incident | null)[]
   alertConfig?: AlertConfig | null

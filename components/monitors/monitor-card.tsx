@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@clerk/nextjs'
+import { getBackendToken } from '@/lib/auth-client'
 import { MoreHorizontal, Pencil, Trash2, Pause, Play, PauseCircle, RefreshCw, Globe, GlobeLock } from 'lucide-react'
 import { Monitor, createApiClient } from '@/lib/api'
 import { LatencyBadge } from './latency-badge'
@@ -23,7 +23,6 @@ export function MonitorCard({ monitor, onDeleted, onUpdated }: MonitorCardProps)
   const [toggling, setToggling] = useState(false)
   const [checking, setChecking] = useState(false)
   const [publishing, setPublishing] = useState(false)
-  const { getToken } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
 
@@ -33,7 +32,7 @@ export function MonitorCard({ monitor, onDeleted, onUpdated }: MonitorCardProps)
     setChecking(true)
     setMenuOpen(false)
     try {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       await api.checkMonitor(monitor.id)
       toast('Check iniciado')
@@ -49,7 +48,7 @@ export function MonitorCard({ monitor, onDeleted, onUpdated }: MonitorCardProps)
     setPublishing(true)
     setMenuOpen(false)
     try {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       await api.updateMonitor(monitor.id, { makePublic: !monitor.publicSlug })
       toast(monitor.publicSlug ? 'Monitor despublicado' : 'Status page publicada')
@@ -65,7 +64,7 @@ export function MonitorCard({ monitor, onDeleted, onUpdated }: MonitorCardProps)
     setToggling(true)
     setMenuOpen(false)
     try {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       await api.updateMonitor(monitor.id, { active: !monitor.active })
       toast(monitor.active ? 'Monitor pausado' : 'Monitor activado')
@@ -80,7 +79,7 @@ export function MonitorCard({ monitor, onDeleted, onUpdated }: MonitorCardProps)
   async function handleDelete() {
     setDeleting(true)
     try {
-      const token = await getToken()
+      const token = await getBackendToken()
       const api = createApiClient(token)
       await api.deleteMonitor(monitor.id)
       toast('Monitor eliminado')

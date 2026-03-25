@@ -22,11 +22,3 @@ body {
   background-color: var(--color-bg-main);
   color: var(--color-text-primary);
 }
-
-/* Clerk theme overrides */
-.cl-card,
-.cl-socialButtonsBlockButton,
-.cl-formFieldInput,
-.cl-footerActionLink {
-  --color-background: var(--color-bg-card);
-}

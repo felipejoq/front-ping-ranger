@@ -1,13 +1,13 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
+import { authClient } from '@/lib/auth-client'
 import { Card } from '@/components/ui/card'
 import { User, Mail } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { user, isLoaded } = useUser()
+  const { data: session, isPending } = authClient.useSession()
 
-  if (!isLoaded) {
+  if (isPending) {
     return (
       <div className="animate-pulse space-y-4">
         <div className="h-8 w-40 bg-bg-elevated rounded" />
@@ -15,6 +15,8 @@ export default function SettingsPage() {
       </div>
     )
   }
+
+  const user = session?.user
 
   return (
     <div>
@@ -28,7 +30,7 @@ export default function SettingsPage() {
             <div>
               <p className="text-xs text-text-muted">Nombre</p>
               <p className="text-sm text-text-primary">
-                {user?.fullName ?? user?.firstName ?? 'Sin nombre'}
+                {user?.name ?? 'Sin nombre'}
               </p>
             </div>
           </div>
@@ -37,7 +39,7 @@ export default function SettingsPage() {
             <div>
               <p className="text-xs text-text-muted">Email</p>
               <p className="text-sm text-text-primary">
-                {user?.primaryEmailAddress?.emailAddress ?? '—'}
+                {user?.email ?? '—'}
               </p>
             </div>
           </div>
