@@ -1,12 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Radar } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 const GitHubIcon = () => (
   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -22,28 +19,7 @@ const Spinner = () => (
 )
 
 export default function SignUpPage() {
-  const router = useRouter()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   const [githubLoading, setGithubLoading] = useState(false)
-
-  const isDisabled = loading || githubLoading
-
-  async function handleSignUp(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    const { error } = await authClient.signUp.email({ name, email, password })
-    if (error) {
-      setError(error.message ?? 'Error al crear la cuenta')
-      setLoading(false)
-    } else {
-      router.push('/dashboard')
-    }
-  }
 
   async function handleGitHub() {
     setGithubLoading(true)
@@ -66,51 +42,12 @@ export default function SignUpPage() {
 
         <button
           onClick={handleGitHub}
-          disabled={isDisabled}
+          disabled={githubLoading}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-border-subtle rounded-lg text-sm text-text-primary hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {githubLoading ? <Spinner /> : <GitHubIcon />}
           {githubLoading ? 'Conectando con GitHub...' : 'Continuar con GitHub'}
         </button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border-subtle" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="px-2 bg-bg-card text-text-muted">o regístrate con email</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleSignUp} className="space-y-4">
-          <Input
-            label="Nombre"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            disabled={isDisabled}
-          />
-          <Input
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={isDisabled}
-          />
-          <Input
-            label="Contraseña"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={isDisabled}
-          />
-          {error && <p className="text-sm text-status-down">{error}</p>}
-          <Button type="submit" className="w-full" loading={loading} disabled={isDisabled}>
-            Crear cuenta
-          </Button>
-        </form>
 
         <p className="text-sm text-center text-text-muted">
           ¿Ya tienes cuenta?{' '}
